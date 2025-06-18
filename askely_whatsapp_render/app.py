@@ -1,59 +1,64 @@
+import os
+import psycopg2
 from flask import Flask, request, render_template
 from twilio.twiml.messaging_response import MessagingResponse
-import psycopg2
-import os
 
 app = Flask(__name__)
 
 # Connexion PostgreSQL
-def get_db_connection():
-    return psycopg2.connect(os.environ['DATABASE_URL'])
+DATABASE_URL = os.environ.get("DATABASE_URL")
+conn = psycopg2.connect(DATABASE_URL, sslmode='require')
+cursor = conn.cursor()
 
+# Page d’accueil
 @app.route("/")
-def index():
-    return "✅ Askely WhatsApp Agent est en ligne."
+def accueil():
+    return """
+    <html>
+    <head><title>Askely Express</title></head>
+    <body>
+        <h2>Bienvenue sur Askely Express</h2>
+        <p>Veuillez choisir une action :</p>
+        <ul>
+            <li><a href="/colis">📦 Voir les colis</a></li>
+            <li><a href="/transporteurs">🚗 Voir les transporteurs</a></li>
+            <li><a href="https://wa.me/212XXXXXXXXX">✉️ Contacter Askely sur WhatsApp</a></li>
+        </ul>
+    </body>
+    </html>
+    """
 
+# Page liste des colis
+@app.route("/colis")
+def liste_colis():
+    cursor.execute("SELECT id, expediteur, destinataire, ville_depart, ville_arrivee FROM colis ORDER BY id DESC")
+    resultats = cursor.fetchall()
+    return render_template("liste_colis.html", colis=resultats)
+
+# Page liste des transporteurs
+@app.route("/transporteurs")
+def liste_transporteurs():
+    cursor.execute("SELECT id, nom, telephone, ville FROM transporteurs ORDER BY id DESC")
+    resultats = cursor.fetchall()
+    return render_template("liste_transporteurs.html", transporteurs=resultats)
+
+# Webhook WhatsApp
 @app.route("/webhook/whatsapp", methods=["POST"])
-def whatsapp_webhook():
-    incoming_msg = request.values.get("Body", "").strip().lower()
-    sender = request.values.get("From", "")
+def whatsapp():
+    msg = request.form.get("Body", "").strip().lower()
     resp = MessagingResponse()
-    msg = resp.message()
+    message = resp.message()
 
-    if incoming_msg in ["bonjour", "salut", "hello"]:
-        msg.body("👋 Bienvenue sur *Askely Express* 🇲🇦
-
-Que souhaitez-vous faire ?
-"
-                 "📦 [1] Envoyer un colis
-🚚 [2] Devenir transporteur
-🔍 [3] Suivre un colis
-"
-                 "🖥️ Voir les listes :
-👉 https://projetcomplet.onrender.com/transporteurs
-👉 https://projetcomplet.onrender.com/colis")
+    if "colis" in msg:
+        message.body("📦 Pour voir la liste des colis : https://projetcomplet.onrender.com/colis")
+    elif "transporteur" in msg:
+        message.body("🚗 Pour voir la liste des transporteurs : https://projetcomplet.onrender.com/transporteurs")
+    elif "bonjour" in msg or "salut" in msg:
+        message.body("👋 Bonjour ! Tape 'colis' ou 'transporteur' pour commencer.")
     else:
-        msg.body("🤖 Option non reconnue. Envoyez 'bonjour' pour commencer.")
+        message.body("❓ Je ne comprends pas. Tape 'colis' ou 'transporteur'.")
 
     return str(resp)
 
-@app.route("/transporteurs")
-def liste_transporteurs():
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT nom, ville_depart, ville_arrivee, date_depart FROM transporteurs ORDER BY date_depart")
-    transporteurs = cur.fetchall()
-    conn.close()
-    return render_template("liste_transporteurs.html", transporteurs=transporteurs)
+# ⚠️ Ne pas ajouter app.run() pour gunicorn
 
-@app.route("/colis")
-def liste_colis():
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT expediteur, destinataire, date_envoi FROM colis ORDER BY date_envoi DESC")
-    colis = cur.fetchall()
-    conn.close()
-    return render_template("liste_colis.html", colis=colis)
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000, debug=True)

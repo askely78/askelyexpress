@@ -1,16 +1,20 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Liste des Transporteurs</title>
+    <title>Liste des Transporteurs - Askely Express</title>
 </head>
 <body>
+    <img src="/static/logo_askely.png" alt="Logo Askely" style="height: 50px;">
     <h1>🚚 Transporteurs disponibles</h1>
+    <p>Voici les transporteurs disponibles pour envoyer vos colis.</p>
     <ul>
-        {% for t in transporteurs %}
-        <li><strong>{{ t[0] }}</strong> - {{ t[1] }} ➡️ {{ t[2] }} le {{ t[3] }}</li>
+        {% for transporteur in transporteurs %}
+        <li><strong>Nom :</strong> {{ transporteur.nom }} |
+            <strong>Numéro WhatsApp :</strong> {{ transporteur.numero }}</li>
         {% endfor %}
     </ul>
-    <p><a href="/">Retour à l’accueil</a></p>
+    <a href="/" style="display:inline-block;margin-top:20px;">⬅️ Retour à l’accueil</a>
 </body>
 </html>
