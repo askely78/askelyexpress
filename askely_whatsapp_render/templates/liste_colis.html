@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Liste des Colis</title>
+</head>
+<body>
+    <h1>📦 Colis enregistrés</h1>
+    <ul>
+        {% for c in colis %}
+        <li><strong>{{ c[0] }}</strong> ➡️ {{ c[1] }} le {{ c[2] }}</li>
+        {% endfor %}
+    </ul>
+    <p><a href="/">Retour à l’accueil</a></p>
+</body>
+</html>

@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Liste des Transporteurs</title>
+</head>
+<body>
+    <h1>🚚 Transporteurs disponibles</h1>
+    <ul>
+        {% for t in transporteurs %}
+        <li><strong>{{ t[0] }}</strong> - {{ t[1] }} ➡️ {{ t[2] }} le {{ t[3] }}</li>
+        {% endfor %}
+    </ul>
+    <p><a href="/">Retour à l’accueil</a></p>
+</body>
+</html>
